@@ -9,6 +9,24 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from .config import SECTIONS
 from .parser import parse_questions
 
+# Dictionary mapping section keys to emojis
+SECTION_EMOJIS = {
+    "udalennie": "🏠",
+    "podderzhka": "👥",
+    "tseli": "🎯",
+    "meshaet": "🚧",
+    "feedback": "💬",
+    "priznanie": "🏆",
+    "career": "📈",
+    "tools": "🛠️",
+    "duties": "📋",
+    "teamwork": "🤝",
+    "satisfaction": "😊",
+    "role": "🎭",
+    "company_feedback": "🏢",
+    "icebreakers": "🧊"
+}
+
 async def load_all_questions() -> None:
     """Load questions for all sections."""
     loop = asyncio.get_running_loop()
@@ -26,7 +44,8 @@ async def handle_start(message: types.Message) -> None:
     """
     buttons = []
     for key, section in SECTIONS.items():
-        button = InlineKeyboardButton(text=section['title'], callback_data=key)
+        emoji = SECTION_EMOJIS.get(key, "")
+        button = InlineKeyboardButton(text=f"{emoji} {section['title']}", callback_data=key)
         buttons.append([button])
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     await message.answer("Выберите раздел вопросов:", reply_markup=keyboard)
@@ -46,16 +65,24 @@ async def handle_section_choice(callback: types.CallbackQuery) -> None:
 
     question_tuple = random.choice(section['questions'])
     rating, question_text = question_tuple
+    emoji = SECTION_EMOJIS.get(section_key, "")
 
-    # Format message with bold section title
-    message_text = f"**{section['title']}**\n\n{question_text}"
+    # Format message with italicized section title
+    message_text = f"_{emoji} {section['title']}_\n\n{question_text}"
+
+    # Add fire emoji(s) based on rating
+    rating_text = str(rating)
+    if rating > 300:
+        rating_text = f"🔥🔥 {rating}"
+    elif rating > 100:
+        rating_text = f"🔥 {rating}"
 
     # Create keyboard with sections list button and rating/next buttons
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="К списку тем", callback_data="show_sections")],
+            [InlineKeyboardButton(text="📋 К списку тем", callback_data="show_sections")],
             [
-                InlineKeyboardButton(text=str(rating), url=section['url']),
+                InlineKeyboardButton(text=rating_text, url=section['url']),
                 InlineKeyboardButton(text="🔄 Другой", callback_data=section_key)
             ]
         ]
@@ -79,7 +106,8 @@ async def handle_show_sections(callback: types.CallbackQuery) -> None:
     # Create sections list keyboard
     buttons = []
     for key, section in SECTIONS.items():
-        button = InlineKeyboardButton(text=section['title'], callback_data=key)
+        emoji = SECTION_EMOJIS.get(key, "")
+        button = InlineKeyboardButton(text=f"{emoji} {section['title']}", callback_data=key)
         buttons.append([button])
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     
