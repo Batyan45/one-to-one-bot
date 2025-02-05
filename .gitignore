@@ -1,0 +1,7 @@
+src/bot/__pycache__/
+.*
+!.gitignore
+!.env.example
+venv/
+__pycache__/
+*.pyc
