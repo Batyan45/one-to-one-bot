@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 env_path = Path(__file__).parent.parent.parent / '.env'
 load_dotenv(env_path)
 
+# Define data directory and questions file path
+DATA_DIR = Path(__file__).parent / 'data'
+QUESTIONS_FILE = DATA_DIR / 'questions.json'
+
 class Section(TypedDict):
     """Type definition for section configuration."""
     title: str

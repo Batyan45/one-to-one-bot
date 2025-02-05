@@ -1,9 +1,65 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 import logging
+import json
 import requests
 from bs4 import BeautifulSoup
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+from pathlib import Path
+
+from .config import SECTIONS, QUESTIONS_FILE, DATA_DIR
+
+def save_questions_to_json(sections: Dict[str, dict]) -> None:
+    """
+    Save questions from all sections to a JSON file.
+    
+    Args:
+        sections: Dictionary containing all sections with their questions.
+    """
+    # Create data directory if it doesn't exist
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    
+    # Prepare data for saving
+    data = {
+        key: {
+            'title': section['title'],
+            'url': section['url'],
+            'questions': section['questions']
+        }
+        for key, section in sections.items()
+    }
+    
+    # Save to JSON file
+    with open(QUESTIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    
+    logging.info(f"Questions saved to {QUESTIONS_FILE}")
+
+def load_questions_from_json() -> bool:
+    """
+    Load questions from JSON file into sections.
+    
+    Returns:
+        bool: True if questions were loaded successfully, False otherwise.
+    """
+    try:
+        if not QUESTIONS_FILE.exists():
+            logging.warning("Questions file not found.")
+            return False
+            
+        with open(QUESTIONS_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        # Update sections with loaded data
+        for key, section_data in data.items():
+            if key in SECTIONS:
+                SECTIONS[key]['questions'] = section_data['questions']
+                
+        logging.info("Questions loaded from JSON file successfully")
+        return True
+    except Exception as e:
+        logging.error(f"Error loading questions from JSON: {e}")
+        return False
 
 def parse_questions(url: str) -> List[Tuple[int, str]]:
     """
